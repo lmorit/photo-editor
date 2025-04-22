@@ -79,14 +79,38 @@ extension PhotoEditorViewController {
         isDrawing = false
     }
     
+    func renderFinalImage(originalImage: UIImage) -> UIImage {
+        let targetSize = originalImage.size
+        let scale = originalImage.scale
+
+        let rendererFormat = UIGraphicsImageRendererFormat()
+        rendererFormat.scale = scale
+        rendererFormat.opaque = false
+
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat)
+
+        return renderer.image { context in
+            originalImage.draw(in: CGRect(origin: .zero, size: targetSize))
+
+            let renderScale = originalImage.size.width / imageView.bounds.width
+            context.cgContext.scaleBy(x: renderScale, y: renderScale)
+            canvasView.layer.render(in: context.cgContext)
+        }
+    }
+
     //MARK: Bottom Toolbar
     
     @IBAction func saveButtonTapped(_ sender: AnyObject) {
-        UIImageWriteToSavedPhotosAlbum(canvasView.toImage(),self, #selector(PhotoEditorViewController.image(_:withPotentialError:contextInfo:)), nil)
+        if let image = image {
+            let finalImage = renderFinalImage(originalImage: image)
+            UIImageWriteToSavedPhotosAlbum(finalImage, self, #selector(PhotoEditorViewController.image(_:withPotentialError:contextInfo:)), nil)
+        }
     }
     
     @IBAction func shareButtonTapped(_ sender: UIButton) {
-        let activity = UIActivityViewController(activityItems: [canvasView.toImage()], applicationActivities: nil)
+        guard let image = image else { return }
+        let finalImage = renderFinalImage(originalImage: image)
+        let activity = UIActivityViewController(activityItems: [finalImage], applicationActivities: nil)
         present(activity, animated: true, completion: nil)
         
     }
@@ -101,8 +125,10 @@ extension PhotoEditorViewController {
     }
     
     @IBAction func continueButtonPressed(_ sender: Any) {
-        let img = self.canvasView.toImage()
-        photoEditorDelegate?.doneEditing(image: img)
+        if let image = image {
+            let finalImage = renderFinalImage(originalImage: image)
+            photoEditorDelegate?.doneEditing(image: finalImage)
+        }
         self.dismiss(animated: true, completion: nil)
     }
 

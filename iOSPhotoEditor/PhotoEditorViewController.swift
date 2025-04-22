@@ -17,10 +17,10 @@ public final class PhotoEditorViewController: UIViewController {
     @IBOutlet weak var imageViewHeightConstraint: NSLayoutConstraint!
     //To hold the drawings and stickers
     @IBOutlet weak var canvasImageView: UIImageView!
-
+    
     @IBOutlet weak var topToolbar: UIView!
     @IBOutlet weak var bottomToolbar: UIView!
-
+    
     @IBOutlet weak var topGradient: UIView!
     @IBOutlet weak var bottomGradient: UIView!
     
@@ -71,7 +71,7 @@ public final class PhotoEditorViewController: UIViewController {
     
     
     var stickersViewController: StickersViewController!
-
+    
     //Register Custom font before we load XIB
     public override func loadView() {
         registerFont()
@@ -80,7 +80,9 @@ public final class PhotoEditorViewController: UIViewController {
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-        self.setImageView(image: image!)
+        if let image = image {
+            self.setImageView(image: image)
+        }
         
         deleteView.layer.cornerRadius = deleteView.bounds.height / 2
         deleteView.layer.borderWidth = 2.0
@@ -128,7 +130,9 @@ public final class PhotoEditorViewController: UIViewController {
     func setImageView(image: UIImage) {
         imageView.image = image
         let size = image.suitableSize(widthLimit: UIScreen.main.bounds.width)
-        imageViewHeightConstraint.constant = (size?.height)!
+        if let height = size?.height {
+            imageViewHeightConstraint.constant = height
+        }
     }
     
     func hideToolbar(hide: Bool) {
@@ -149,8 +153,4 @@ extension PhotoEditorViewController: ColorDelegate {
         }
     }
 }
-
-
-
-
 

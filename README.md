@@ -1,4 +1,4 @@
-# iOS Photo Editor
+# iOS Photo Editor - By using the original image quality instead of the UIView canvas image
 
 ## Features
 - [x] Cropping 
