@@ -81,20 +81,37 @@ extension PhotoEditorViewController {
     
     func renderFinalImage(originalImage: UIImage) -> UIImage {
         let targetSize = originalImage.size
-        let scale = originalImage.scale
-
         let rendererFormat = UIGraphicsImageRendererFormat()
-        rendererFormat.scale = scale
+        rendererFormat.scale = originalImage.scale
         rendererFormat.opaque = false
 
         let renderer = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat)
 
-        return renderer.image { context in
+        return renderer.image { _ in
             originalImage.draw(in: CGRect(origin: .zero, size: targetSize))
 
-            let renderScale = originalImage.size.width / imageView.bounds.width
-            context.cgContext.scaleBy(x: renderScale, y: renderScale)
-            canvasView.layer.render(in: context.cgContext)
+            guard canvasImageView.bounds.width > 0,
+                  canvasImageView.bounds.height > 0,
+                  canvasImageView.image != nil || !canvasImageView.subviews.isEmpty else {
+                return
+            }
+
+            let pixelWidth = originalImage.size.width * originalImage.scale
+            let pixelHeight = originalImage.size.height * originalImage.scale
+            let widthScale = pixelWidth / canvasImageView.bounds.width
+            let heightScale = pixelHeight / canvasImageView.bounds.height
+            let overlayScale = max(widthScale, heightScale)
+
+            guard overlayScale.isFinite, overlayScale > 0 else {
+                return
+            }
+
+            let wasOpaque = canvasImageView.isOpaque
+            canvasImageView.isOpaque = false
+            defer { canvasImageView.isOpaque = wasOpaque }
+
+            let overlayImage = canvasImageView.toImage(scale: overlayScale)
+            overlayImage.draw(in: CGRect(origin: .zero, size: targetSize))
         }
     }
 
